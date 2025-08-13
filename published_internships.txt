@@ -1,0 +1,3 @@
+Accelerating Fault Simulation at RTL on GPU Compute Clusters | https://tumanager.ei.tum.de:443/service.php?token=lifecycle_sec_tueieda&mode=pdfdownload&tId=480&language=en
+DVCon Challenge 2025: Precise Power Estimation of SoC in SystemC | https://tumanager.ei.tum.de:443/service.php?token=lifecycle_sec_tueieda&mode=pdfdownload&tId=471&language=en
+Neural Architecture Search for Efficient Vision Transformer | https://tumanager.ei.tum.de:443/service.php?token=lifecycle_sec_tueieda&mode=pdfdownload&tId=450&language=en
