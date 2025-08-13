@@ -28,11 +28,15 @@ jobs:
       - name: Run internship checker
         run: python check_internships.py
 
-      # 5. Commit and push changes
+      # 5. Download PDF files
+      - name: Download PDF files
+        run: python download_pdf.py
+
+      # 6. Commit and push changes
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add published_internships.txt
-          git commit -m "Update internship list [skip ci]" || echo "No changes to commit"
+          git add published_internships.txt downloads/
+          git commit -m "Update internship list and PDFs [skip ci]" || echo "No changes to commit"
           git push
