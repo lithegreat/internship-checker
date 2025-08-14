@@ -46,10 +46,22 @@ def sanitize_filename(filename):
     
     return filename
 
-def download_pdf(url, save_dir="downloads"):
+def extract_chair_from_source(source_url):
+    """
+    Extract chair name from source URL.
+    """
+    if 'eda' in source_url.lower():
+        return 'EDA'
+    elif 'lkn' in source_url.lower():
+        return 'LKN'
+    else:
+        return 'UNKNOWN'
+
+def download_pdf(url, title=None, source_url=None, save_dir="downloads"):
     """
     Download a PDF file from the given URL and save it to the specified directory.
-    Uses the actual PDF filename from server response when available.
+    Uses custom filename based on chair and title when provided.
+    If file exists, replace it with the newer version.
     """
 
     # Check if save_dir exists as a file
@@ -66,19 +78,22 @@ def download_pdf(url, save_dir="downloads"):
             print(f"Warning: URL did not return a PDF (Content-Type: {content_type}): {url}")
             return None
         
-        # Get the actual filename from response or URL
-        filename = get_filename_from_response(response, url)
-        filename = sanitize_filename(filename)
+        # Create custom filename if title and source are provided
+        if title and source_url:
+            chair = extract_chair_from_source(source_url)
+            filename = f"{chair}-{title}.pdf"
+            filename = sanitize_filename(filename)
+        else:
+            # Fallback to original method
+            filename = get_filename_from_response(response, url)
+            filename = sanitize_filename(filename)
         
-        # Handle duplicate filenames
+        # Set save path - will overwrite if file exists
         save_path = os.path.join(save_dir, filename)
-        counter = 1
-        original_filename = filename
-        while os.path.exists(save_path):
-            name, ext = os.path.splitext(original_filename)
-            filename = f"{name}_{counter}{ext}"
-            save_path = os.path.join(save_dir, filename)
-            counter += 1
+        
+        # Check if file already exists and inform user
+        if os.path.exists(save_path):
+            print(f"File already exists, replacing: {save_path}")
         
         with open(save_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
@@ -92,16 +107,36 @@ def download_pdf(url, save_dir="downloads"):
 def download_from_published(file_path="published_internships.txt"):
     """
     Read URLs from the published_internships.txt file and download all PDF links found.
+    New format: Title | URL | Source
     """
     if not os.path.exists(file_path):
         print(f"File not found: {file_path}")
         return
+    
+    downloaded_count = 0
     with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split("|", 1)
-            if len(parts) == 2:
+        for line_num, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:  # Skip empty lines
+                continue
+                
+            parts = line.split("|")
+            if len(parts) >= 2:  # Support both old format (2 parts) and new format (3 parts)
+                title = parts[0].strip()
                 url = parts[1].strip()
-                download_pdf(url)
+                source = parts[2].strip() if len(parts) >= 3 else "Unknown"
+                
+                print(f"\nDownloading: {title}")
+                print(f"Source: {source}")
+                print(f"URL: {url}")
+                
+                result = download_pdf(url, title=title, source_url=source)
+                if result:
+                    downloaded_count += 1
+            else:
+                print(f"Warning: Invalid format on line {line_num}: {line}")
+    
+    print(f"\nDownload completed. Successfully downloaded {downloaded_count} PDFs.")
 
 if __name__ == "__main__":
     print("Downloading all PDFs from published_internships.txt...")
