@@ -52,7 +52,11 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add published_internships.txt downloads/
+          git add published_internships.txt
+          # Add downloads directory only if it exists and has files
+          if [ -d "downloads" ] && [ "$(ls -A downloads)" ]; then
+            git add downloads/
+          fi
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
