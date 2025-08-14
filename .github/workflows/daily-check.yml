@@ -28,11 +28,34 @@ jobs:
       - name: Run internship checker
         run: python check_internships.py
 
-      # 5. Commit and push changes
+      # 5. Check if internships file was updated
+      - name: Check for changes in internships file
+        id: check-changes
+        run: |
+          if git diff --name-only | grep -q "published_internships.txt"; then
+            echo "file_changed=true" >> $GITHUB_OUTPUT
+            echo "Internships file was updated"
+          else
+            echo "file_changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to internships file"
+          fi
+
+      # 6. Download PDFs if file was updated
+      - name: Download PDFs
+        if: steps.check-changes.outputs.file_changed == 'true'
+        run: |
+          echo "Internships file was updated, downloading PDFs..."
+          python download_pdf.py
+
+      # 7. Commit and push all changes
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add published_internships.txt
-          git commit -m "Update internship list [skip ci]" || echo "No changes to commit"
-          git push
+          git add published_internships.txt downloads/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update internship list and download PDFs [skip ci]"
+            git push
+          fi
