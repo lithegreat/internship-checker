@@ -43,9 +43,14 @@ jobs:
       # 6. Download PDFs if file was updated
       - name: Download PDFs
         if: steps.check-changes.outputs.file_changed == 'true'
+        continue-on-error: true  # Don't fail the workflow if downloads fail
+        env:
+          CI: true  # Enable CI mode for download script
         run: |
           echo "Internships file was updated, downloading PDFs..."
-          python download_pdf.py
+          echo "Testing network connectivity..."
+          ping -c 3 tumanager.ei.tum.de || echo "Direct ping failed, but trying downloads anyway"
+          python download_pdf.py || echo "Some downloads may have failed, but continuing with workflow"
 
       # 7. Commit and push all changes
       - name: Commit and push changes
